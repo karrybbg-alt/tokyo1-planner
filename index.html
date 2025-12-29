@@ -7,7 +7,7 @@ let currentPhoto = null; // base64 string
 // Source: Xe.com, Forbes Advisor, Bloomberg (mid-market rate)
 const HKD_RATE = 0.0497;  // 1 JPY ≈ 0.0497 HKD
 
-// Optional: Display the current rate in UI (add the HTML in Step 2)
+// Update the rate display in UI (if the HTML element exists)
 function updateRateDisplay() {
     const rateDisplay = document.getElementById('currentRateDisplay');
     if (rateDisplay) {
@@ -44,8 +44,9 @@ function loadExpenses() {
         `;
         expenseList.appendChild(item);
     });
+    
     updateTotal();
-    updateRateDisplay(); // Update rate text when loading
+    updateRateDisplay();
 }
 
 function updateTotal() {
@@ -60,7 +61,6 @@ function updateTotal() {
         <div class="text-lg gold-text">HK$${totalHKD.toFixed(1)}</div>
     `;
    
-    // Replace existing summary if any
     const existing = expenseList.querySelector('.summary-total');
     if (existing) existing.remove();
     summary.classList.add('summary-total');
@@ -113,7 +113,7 @@ function processImage(event) {
    
     const reader = new FileReader();
     reader.onload = function(e) {
-        currentPhoto = e.target.result; // base64
+        currentPhoto = e.target.result;
         document.getElementById('photoStatus').textContent = 'Photo Selected ✓';
     };
     reader.readAsDataURL(file);
@@ -123,18 +123,13 @@ function processImage(event) {
 document.getElementById('jpyInput').addEventListener('input', function(e) {
     const jpy = parseFloat(e.target.value) || 0;
     const hkd = jpy * HKD_RATE;
-        // Current exchange rate as of December 30, 2025 (source: Xe.com, Forbes, Bloomberg)
-const HKD_RATE = 0.0497;  // 1 JPY ≈ 0.0497 HKD
-        <div id="currentRateDisplay" class="text-xs text-gray-500 text-center mt-4 mb-4">
-    匯率: 1 ¥ = HK$ 0.0497 (2025年12月30日)
-</div>
     document.getElementById('hkdResult').textContent = `HK$ ${hkd.toFixed(1)}`;
 });
 
 // Initialize on load
 loadExpenses();
 
-// Memo and checklist code remains unchanged...
+// Memo link detection
 const memoArea = document.getElementById('memoArea');
 const memoLinks = document.getElementById('memoLinks');
 memoArea.addEventListener('input', function() {
@@ -153,6 +148,7 @@ memoArea.addEventListener('input', function() {
     });
 });
 
+// Checklist
 const checklist = document.getElementById('checklist');
 function addChecklistItem(text, checked = false) {
     const id = 'check-' + Date.now();
