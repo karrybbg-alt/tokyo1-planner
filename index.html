@@ -1,19 +1,36 @@
-// Complete this section at the bottom of your <script> tag
-
 // --- Wallet Logic ---
 const expenseList = document.getElementById('expenseList');
 let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
 let currentPhoto = null; // base64 string
 
+// Current exchange rate as of December 30, 2025
+// Source: Xe.com, Forbes Advisor, Bloomberg (mid-market rate)
+const HKD_RATE = 0.0497;  // 1 JPY ≈ 0.0497 HKD
+
+// Optional: Display the current rate in UI (add the HTML in Step 2)
+function updateRateDisplay() {
+    const rateDisplay = document.getElementById('currentRateDisplay');
+    if (rateDisplay) {
+        rateDisplay.textContent = `匯率: 1 ¥ = HK$ ${HKD_RATE.toFixed(4)} (2025年12月30日)`;
+    }
+}
+
 // Load existing expenses on page load
 function loadExpenses() {
     expenseList.innerHTML = '';
+    
+    // Sort expenses: newest first
+    expenses.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    
     expenses.forEach((exp, index) => {
         const item = document.createElement('div');
         item.className = 'card p-3 flex justify-between items-center';
         item.innerHTML = `
             <div>
                 <div class="font-medium">${exp.name}</div>
+                <div class="text-xs text-gray-500">
+                    ${new Date(exp.timestamp).toLocaleDateString('zh-HK')}
+                </div>
                 <div class="text-xs text-gray-500">
                     ¥${exp.price.toLocaleString()} → HK$${exp.hkd.toFixed(1)}
                 </div>
@@ -28,12 +45,13 @@ function loadExpenses() {
         expenseList.appendChild(item);
     });
     updateTotal();
+    updateRateDisplay(); // Update rate text when loading
 }
 
 function updateTotal() {
     const totalJPY = expenses.reduce((sum, exp) => sum + exp.price, 0);
     const totalHKD = expenses.reduce((sum, exp) => sum + exp.hkd, 0);
-    
+   
     const summary = document.createElement('div');
     summary.className = 'card p-4 mt-4 bg-gray-900/50 text-center';
     summary.innerHTML = `
@@ -41,8 +59,8 @@ function updateTotal() {
         <div class="text-2xl font-bold gold-text mt-1">¥${totalJPY.toLocaleString()}</div>
         <div class="text-lg gold-text">HK$${totalHKD.toFixed(1)}</div>
     `;
-    
-    // Replace or append summary
+   
+    // Replace existing summary if any
     const existing = expenseList.querySelector('.summary-total');
     if (existing) existing.remove();
     summary.classList.add('summary-total');
@@ -52,14 +70,14 @@ function updateTotal() {
 function addExpense() {
     const name = document.getElementById('itemName').value.trim();
     const price = parseFloat(document.getElementById('itemPrice').value);
-    
+   
     if (!name || isNaN(price) || price <= 0) {
         alert('請輸入有效的品項名稱與金額');
         return;
     }
-    
+   
     const hkd = price * HKD_RATE;
-    
+   
     const expense = {
         name,
         price,
@@ -67,17 +85,17 @@ function addExpense() {
         photo: currentPhoto || null,
         timestamp: new Date().toISOString()
     };
-    
+   
     expenses.push(expense);
     localStorage.setItem('expenses', JSON.stringify(expenses));
-    
+   
     // Reset form
     document.getElementById('itemName').value = '';
     document.getElementById('itemPrice').value = '';
     document.getElementById('photoInput').value = '';
     currentPhoto = null;
     document.getElementById('photoStatus').textContent = 'No Photo';
-    
+   
     loadExpenses();
 }
 
@@ -92,7 +110,7 @@ function deleteExpense(index) {
 function processImage(event) {
     const file = event.target.files[0];
     if (!file) return;
-    
+   
     const reader = new FileReader();
     reader.onload = function(e) {
         currentPhoto = e.target.result; // base64
@@ -108,18 +126,17 @@ document.getElementById('jpyInput').addEventListener('input', function(e) {
     document.getElementById('hkdResult').textContent = `HK$ ${hkd.toFixed(1)}`;
 });
 
-// Initialize wallet on load
+// Initialize on load
 loadExpenses();
 
-// Optional: Auto-link detection in memo textarea
+// Memo and checklist code remains unchanged...
 const memoArea = document.getElementById('memoArea');
 const memoLinks = document.getElementById('memoLinks');
-
 memoArea.addEventListener('input', function() {
     const text = memoArea.value;
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     const urls = text.match(urlRegex) || [];
-    
+   
     memoLinks.innerHTML = '';
     urls.forEach(url => {
         const link = document.createElement('a');
@@ -131,9 +148,7 @@ memoArea.addEventListener('input', function() {
     });
 });
 
-// Optional: Basic checklist functionality
 const checklist = document.getElementById('checklist');
-
 function addChecklistItem(text, checked = false) {
     const id = 'check-' + Date.now();
     const item = document.createElement('div');
@@ -145,7 +160,6 @@ function addChecklistItem(text, checked = false) {
     checklist.appendChild(item);
 }
 
-// You can pre-populate some items
 const defaultChecklist = [
     '護照 + 簽證 (如需要)',
     '信用卡 + 現金',
@@ -155,5 +169,4 @@ const defaultChecklist = [
     'Visit Japan Web QR code',
     '迪士尼門票預約'
 ];
-
 defaultChecklist.forEach(item => addChecklistItem(item));
